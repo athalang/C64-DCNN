@@ -7,6 +7,8 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import StepLR
 
+from optimum.quanto import quantize, freeze, qint8, QTensor, safe_save
+
 from net import Net
 from evaluate import evaluate
 
@@ -16,6 +18,8 @@ def train(args, model, device, train_loader, optimizer, epoch):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
+        if isinstance(output, QTensor):
+            output = output.dequantize()
         loss = F.nll_loss(output, target)
         loss.backward()
         optimizer.step()
@@ -54,7 +58,6 @@ def main():
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     use_mps = not args.no_mps and torch.backends.mps.is_available()
-
     torch.manual_seed(args.seed)
 
     if use_cuda:
@@ -99,20 +102,17 @@ def main():
             parameters,
             pruning_method=prune.L1Unstructured,
             amount=0.2,
-        ) 
+        )
         evaluate(model, device, test_loader)
         scheduler.step()
+
+    quantize(model, weights=qint8, activations=qint8)
     
-    backend = "qnnpack"
-    torch.backends.quantized.engine = backend
-    model.qconfig = torch.quantization.get_default_qconfig(backend)
-    model_static_quantized = torch.quantization.prepare(model, inplace=False)
-    model_static_quantized = torch.quantization.convert(model_static_quantized, inplace=False)
-
-    print(model_static_quantized.fc1.weight().int_repr().to_sparse_csr())
-
+    evaluate(model, device, test_loader)
+     
     if args.save_model:
-        torch.save(model_static_quantized.state_dict(), "mnist_cnn.pt")
+        freeze(model)
+        safe_save(model.state_dict(), 'qmodel.safetensors')
 
 if __name__ == '__main__':
     main()
