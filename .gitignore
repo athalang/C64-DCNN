@@ -3,3 +3,5 @@
 *.prg
 
 data/
+
+**/__pycache__/
