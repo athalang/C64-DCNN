@@ -2,15 +2,17 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+# Modified LeNeT-5 architecture
+# FC parameters divided by 8 as suggested in LightweightNet
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         
         self.conv1 = nn.Conv2d(1, 6, 5, 1, 2, bias=False)
         self.conv2 = nn.Conv2d(6, 16, 5, bias=False)
-        self.fc1 = nn.Linear(400, 120)
-        self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)
+        self.fc1 = nn.Linear(400, 15)
+        self.fc2 = nn.Linear(15, 10)
+        self.fc3 = nn.Linear(10, 10)
 
     def forward(self, x):
         x = F.max_pool2d(F.relu(self.conv1(x)), 2)
