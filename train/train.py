@@ -98,11 +98,12 @@ def main():
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
     for epoch in range(1, args.epochs + 1):
         train(args, model, device, train_loader, optimizer, epoch)
-        prune.global_unstructured(
-            parameters,
-            pruning_method=prune.L1Unstructured,
-            amount=0.2,
-        )
+        if (epoch == args.epochs - 1):
+            prune.global_unstructured(
+                parameters,
+                pruning_method=prune.L1Unstructured,
+                amount=0.85,
+            )
         evaluate(model, device, test_loader)
         scheduler.step()
 
