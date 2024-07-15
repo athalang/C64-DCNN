@@ -6,11 +6,15 @@ class Matrix:
     type_i: c_uint8
     rows_i: c_uint16
     cols_i: c_uint16
-    scale_f: c_uint16 # fxp-u16/15
+
+@dataclass(kw_only=True)
+class ZeroMatrix(Matrix):
+    type_i: c_uint8 = 0
 
 @dataclass(kw_only=True)
 class CSRMatrix(Matrix):
-    type_i: c_uint8 = 0
+    type_i: c_uint8 = 1
+    scale_f: c_uint16 # fxp-u16/15
     nnz_i: c_uint16 # number of non-zero elements
     row_ptrs_a: list[c_uint16] # length is nnz_i
     col_index_a: list[c_uint16] # length is nnz_i
