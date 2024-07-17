@@ -23,3 +23,13 @@ class Net(nn.Module):
         x = self.fc3(x)
         x = F.log_softmax(x, dim=1)
         return x
+
+if __name__ == '__main__':
+    try:
+        from torchinfo import summary
+
+        model = Net()
+        batch_size = 64
+        summary(model, input_size=(batch_size, 1, 28, 28))
+    except ImportError:
+        print("torchinfo not found; skipping summary")
