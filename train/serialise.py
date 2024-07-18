@@ -74,7 +74,6 @@ def populateFC(qlin: QLinear) -> FullConn:
     return FullConn(
         in_i=qlin.in_features,
         out_i=qlin.out_features,
-        bias_i=len(biases),
         bias_a=biases,
         scale_a=filter_scales,
         matrix_o=matrix,

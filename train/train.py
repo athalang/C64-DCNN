@@ -45,17 +45,16 @@ def main():
                         help='disables CUDA training')
     parser.add_argument('--no-mps', action='store_true', default=False,
                         help='disables macOS GPU training')
-    parser.add_argument('--seed', type=int, default=1, metavar='S',
-                        help='random seed (default: 1)')
     parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                         help='how many batches to wait before logging training status')
     parser.add_argument('-s', '--save-model', action='store_true', default=False,
                         help='For Saving the current Model')
+    parser.add_argument('-p', '--prune-nth-last', type=int, default=2, metavar='N',
+                        help='prune the nth last epoch (default: 2)')
 
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     use_mps = not args.no_mps and torch.backends.mps.is_available()
-    torch.manual_seed(args.seed)
 
     if use_cuda:
         device = torch.device("cuda")
@@ -95,7 +94,7 @@ def main():
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
     for epoch in range(1, args.epochs + 1):
         train(args, model, device, train_loader, optimizer, epoch)
-        if (epoch == args.epochs - 1):
+        if (epoch == args.epochs - args.prune_nth_last):
             prune.global_unstructured(
                 parameters,
                 pruning_method=prune.L1Unstructured,
