@@ -26,7 +26,9 @@ class CSRMatrix(Matrix):
     value_a: list[c_int8] # nnz_i bytes
 
     def bytes(self) -> int:
-        return super().bytes() + 2 + 5 * self.nnz_i
+        pointer_bytes = 6
+        list_bytes = 5 * self.nnz_i
+        return super().bytes() + pointer_bytes + 2 + list_bytes
 
 @dataclass
 class Forward:
@@ -65,7 +67,9 @@ class FullConn(Layer):
     matrix_o: Matrix
 
     def bytes(self) -> int:
-        return super().bytes() + 4 * self.out_i + self.matrix_o.bytes(self.matrix_o)
+        pointer_bytes = 6
+        list_bytes = 4 * self.out_i
+        return super().bytes() + pointer_bytes + list_bytes + self.matrix_o.bytes(self.matrix_o)
 
 @dataclass(kw_only=True)
 class Conv(Layer):
@@ -78,8 +82,10 @@ class Conv(Layer):
     matrix_aa: list[list[Matrix]]
 
     def bytes(self) -> int:
+        pointer_bytes = 4
+        scale_bytes = self.in_i * self.out_i * 2
         matrix_bytes = sum([matrix.bytes() for matrices in self.matrix_aa for matrix in matrices])
-        return super().bytes() + 2 + self.in_i * self.out_i * 2 + matrix_bytes
+        return super().bytes() + 2 + pointer_bytes + scale_bytes + matrix_bytes
 
 @dataclass(kw_only=True)
 class MaxPool(Forward):
@@ -102,4 +108,6 @@ class Model:
     forwards_a: list[Forward]
 
     def bytes(self) -> int:
-        return 1 + self.forwards_i * 2
+        pointer_bytes = self.forwards_i * 2
+        forwards_bytes = sum([forward.bytes() for forward in self.forwards_a])
+        return 1 + pointer_bytes + forwards_bytes
