@@ -79,6 +79,11 @@ def populateFC(qlin: QLinear) -> FullConn:
         matrix_o=matrix,
     )
 
+def place16BitWord(word: int, bytes: bytearray, pointer: int):
+    # little endian, highest byte first
+    bytes[pointer] = word & 0xff
+    bytes[pointer + 1] = (word >> 8) & 0xff
+
 if __name__ == '__main__':
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -109,4 +114,18 @@ if __name__ == '__main__':
 
     structure = Model(len(forwards), forwards)
 
-    print(forwards)
+    out = bytearray()
+    out.append(structure.forwards_i)
+    print(len(out))
+
+    # Add placeholder pointer bytes
+    out.extend([0 for i in range(structure.forwards_i * 2)])
+    print(len(out))
+
+    for forward_counter in range(structure.forwards_i):
+        place16BitWord(len(out), out, 1 + forward_counter * 2)
+
+        out.append(forwards[forward_counter].type_i)
+
+    print(out)
+    print(out.hex())
