@@ -50,7 +50,7 @@ def populateConv(qconv: QConv2d) -> Conv:
                 matrix = populateCSRMatrix(filter_weights)
 
             matrices.append(matrix)
-            scales.append(Fxp(filter_scale, dtype='fxp-u16/15'))
+            scales.append(fixedUint(filter_scale))
 
         nested_matrices.append(matrices)
         nested_scales.append(scales)
@@ -64,9 +64,9 @@ def populateConv(qconv: QConv2d) -> Conv:
     )
 
 def populateFC(qlin: QLinear) -> FullConn:
-    biases = [Fxp(bias.item(), dtype='fxp-u16/15') for bias in qlin.bias]
+    biases = [fixedUint(bias.item()) for bias in qlin.bias]
 
-    filter_scales = [Fxp(scale.item(), dtype='fxp-u16/15') for scale in torch.flatten(qlin.weight._scale)]
+    filter_scales = [fixedUint(scale.item()) for scale in torch.flatten(qlin.weight._scale)]
     filter_weights = qlin.weight._data.to_sparse_csr()
 
     matrix = populateCSRMatrix(filter_weights)
@@ -79,10 +79,18 @@ def populateFC(qlin: QLinear) -> FullConn:
         matrix_o=matrix,
     )
 
+def fixedUint(float) -> int:
+    return int(Fxp(float, dtype='fxp-u16/15').bin(), 2)
+
 def place16BitWord(word: int, bytes: bytearray, pointer: int):
     # little endian, highest byte first
     bytes[pointer] = word & 0xff
     bytes[pointer + 1] = (word >> 8) & 0xff
+
+def append16BitWord(word: int, bytes: bytearray):
+    # little endian, highest byte first
+    bytes.append(word & 0xff)
+    bytes.append((word >> 8) & 0xff)
 
 if __name__ == '__main__':
     # Suppress sparse_csr warning
@@ -120,16 +128,37 @@ if __name__ == '__main__':
 
     out = bytearray()
     out.append(structure.forwards_i)
-    print(len(out))
 
     # Add placeholder pointer bytes
     out.extend([0 for i in range(structure.forwards_i * 2)])
-    print(len(out))
 
     for forward_counter in range(structure.forwards_i):
         place16BitWord(len(out), out, 1 + forward_counter * 2)
 
-        out.append(forwards[forward_counter].type_i)
+        forward = forwards[forward_counter]
+        out.append(forward.type_i)
 
-    print(out)
+        if isinstance(forward, Layer):
+            append16BitWord(forward.in_i, out)
+            append16BitWord(forward.out_i, out)
+
+            if isinstance(forward, FullConn):
+                # Add placeholder pointer bytes
+                pointers = len(out)
+                out.extend([0 for i in range(3 * 2)])
+
+                place16BitWord(len(out), out, pointers)
+                for bias in forward.bias_a:
+                    append16BitWord(bias, out)
+
+                place16BitWord(len(out), out, pointers + 2)
+                for scale in forward.scale_a:
+                    append16BitWord(scale, out)
+        else:
+            if isinstance(forward, MaxPool):
+                out.append(forward.kernel_i)
+
     print(out.hex())
+
+    with open("model.bin", "wb") as binary_file:
+        binary_file.write(out)
