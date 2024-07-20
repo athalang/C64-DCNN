@@ -85,6 +85,10 @@ def place16BitWord(word: int, bytes: bytearray, pointer: int):
     bytes[pointer + 1] = (word >> 8) & 0xff
 
 if __name__ == '__main__':
+    # Suppress sparse_csr warning
+    from warnings import filterwarnings
+    filterwarnings('ignore', '.*Sparse CSR tensor support is in beta state.*')
+
     if torch.cuda.is_available():
         device = torch.device("cuda")
     elif torch.backends.mps.is_available():
