@@ -25,6 +25,7 @@ def populateCSRMatrix(sparse: torch.Tensor) -> CSRMatrix:
         col_i=sparse.shape[1],
         # last element of crow_indices is nnz
         nnz_i=sparse.crow_indices()[-1].item(),
+        row_ptr_i=len(row_ptrs),
         row_ptr_a=row_ptrs,
         col_index_a=col_indices,
         value_a=values,
@@ -158,7 +159,6 @@ if __name__ == '__main__':
             if isinstance(forward, MaxPool):
                 out.append(forward.kernel_i)
 
-    print(out.hex())
 
     with open("model.bin", "wb") as binary_file:
         binary_file.write(out)

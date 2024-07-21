@@ -7,57 +7,35 @@ class Matrix:
     row_i: c_uint16
     col_i: c_uint16
 
-    def bytes() -> int:
-        return 5
-
 @dataclass(kw_only=True)
 class ZeroMatrix(Matrix):
     type_i: c_uint8 = 0
-
-    def bytes() -> int:
-        return super().bytes()
 
 @dataclass(kw_only=True)
 class CSRMatrix(Matrix):
     type_i: c_uint8 = 1
     nnz_i: c_uint16
-    row_ptr_a: list[c_uint16] # nnz_i * 2 bytes
+    row_ptr_i: c_uint16
+    row_ptr_a: list[c_uint16] # row_ptr_i bytes
     col_index_a: list[c_uint16] # nnz_i * 2 bytes
     value_a: list[c_int8] # nnz_i bytes
-
-    def bytes(self) -> int:
-        pointer_bytes = 6
-        list_bytes = 5 * self.nnz_i
-        return super().bytes() + pointer_bytes + 2 + list_bytes
 
 @dataclass
 class Forward:
     type_i: c_uint8
 
-    def bytes() -> int:
-        return 1
-
 @dataclass(kw_only=True)
 class ReLu(Forward):
     type_i: c_uint8 = 0
-
-    def bytes() -> int:
-        return super().bytes()
 
 @dataclass(kw_only=True)
 class ArgMax(Forward):
     type_i: c_uint8 = 1
 
-    def bytes() -> int:
-        return super().bytes()
-
 @dataclass
 class Layer(Forward):
     in_i: c_uint16
     out_i: c_uint16
-
-    def bytes() -> int:
-        return super().bytes() + 4
 
 @dataclass(kw_only=True)
 class FullConn(Layer):
@@ -65,11 +43,6 @@ class FullConn(Layer):
     bias_a: list[c_uint16] # list[fxp-u16/15], out_i * 2 bytes
     scale_a: list[c_uint16] # list[fxp-u16/15], out_i * 2 bytes
     matrix_o: Matrix
-
-    def bytes(self) -> int:
-        pointer_bytes = 6
-        list_bytes = 4 * self.out_i
-        return super().bytes() + pointer_bytes + list_bytes + self.matrix_o.bytes(self.matrix_o)
 
 @dataclass(kw_only=True)
 class Conv(Layer):
@@ -81,33 +54,16 @@ class Conv(Layer):
     scale_aa: list[list[c_uint16]] # list[list[fxp-u16/15]]
     matrix_aa: list[list[Matrix]]
 
-    def bytes(self) -> int:
-        pointer_bytes = 4
-        scale_bytes = self.in_i * self.out_i * 2
-        matrix_bytes = sum([matrix.bytes() for matrices in self.matrix_aa for matrix in matrices])
-        return super().bytes() + 2 + pointer_bytes + scale_bytes + matrix_bytes
-
 @dataclass(kw_only=True)
 class MaxPool(Forward):
     type_i: c_uint8 = 4
     kernel_i: c_uint8
 
-    def bytes() -> int:
-        return super().bytes() + 1
-
 @dataclass(kw_only=True)
 class Flatten(Forward):
     type_i: c_uint8 = 5
-
-    def bytes() -> int:
-        return super().bytes()
 
 @dataclass
 class Model:
     forwards_i: c_uint8
     forwards_a: list[Forward]
-
-    def bytes(self) -> int:
-        pointer_bytes = self.forwards_i * 2
-        forwards_bytes = sum([forward.bytes() for forward in self.forwards_a])
-        return 1 + pointer_bytes + forwards_bytes
