@@ -93,6 +93,31 @@ def append16BitWord(word: int, bytes: bytearray):
     bytes.append(word & 0xff)
     bytes.append((word >> 8) & 0xff)
 
+def matrixBytes(matrix: Matrix, out: bytearray):
+    out.append(matrix.type_i)
+    append16BitWord(matrix.row_i, out)
+    append16BitWord(matrix.col_i, out)
+
+    if isinstance(matrix, CSRMatrix):
+        append16BitWord(matrix.nnz_i, out)
+        append16BitWord(matrix.row_i, out)
+
+        # Add placeholder pointer bytes
+        pointers = len(out)
+        out.extend([0 for i in range(3 * 2)])
+
+        place16BitWord(len(out), out, pointers)
+        for row_ptr in matrix.row_ptr_a:
+            append16BitWord(row_ptr, out)
+
+        place16BitWord(len(out), out, pointers + 2)
+        for col_index in matrix.col_index_a:
+            append16BitWord(col_index, out)
+
+        place16BitWord(len(out), out, pointers + 4)
+        for value in matrix.value_a:
+            out.append(value & 0xff)
+
 if __name__ == '__main__':
     # Suppress sparse_csr warning
     from warnings import filterwarnings
@@ -155,10 +180,12 @@ if __name__ == '__main__':
                 place16BitWord(len(out), out, pointers + 2)
                 for scale in forward.scale_a:
                     append16BitWord(scale, out)
+
+                place16BitWord(len(out), out, pointers + 4)
+                matrixBytes(forward.matrix_o, out)
         else:
             if isinstance(forward, MaxPool):
                 out.append(forward.kernel_i)
-
 
     with open("model.bin", "wb") as binary_file:
         binary_file.write(out)
