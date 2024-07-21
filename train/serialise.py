@@ -60,6 +60,7 @@ def populateConv(qconv: QConv2d) -> Conv:
         in_i=qconv.in_channels,
         out_i=qconv.out_channels,
         kernel_i=qconv.kernel_size[0],
+        padding_i=qconv.padding[0],
         scale_aa=nested_scales,
         matrix_aa=nested_matrices,
     )
@@ -183,6 +184,24 @@ if __name__ == '__main__':
 
                 place16BitWord(len(out), out, pointers + 4)
                 matrixBytes(forward.matrix_o, out)
+            elif isinstance(forward, Conv):
+                out.append(forward.kernel_i)
+                out.append(forward.padding_i)
+
+                # Add placeholder pointer bytes
+                pointers = len(out)
+                out.extend([0 for i in range(2 * 2)])
+
+                place16BitWord(len(out), out, pointers)
+                for row in forward.scale_aa:
+                    for scale in row:
+                        append16BitWord(scale, out)
+
+                place16BitWord(len(out), out, pointers + 2)
+                for row in forward.matrix_aa:
+                    for matrix in row:
+                        matrixBytes(matrix, out)
+
         else:
             if isinstance(forward, MaxPool):
                 out.append(forward.kernel_i)

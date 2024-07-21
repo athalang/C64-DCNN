@@ -48,7 +48,7 @@ class FullConn(Layer):
 class Conv(Layer):
     type_i: c_uint8 = 3
     kernel_i: c_uint8
-    padding_i: c_uint8 = 0
+    padding_i: c_uint8
 
     # list of out_i lists, with in_i matrices each
     scale_aa: list[list[c_uint16]] # list[list[fxp-u16/15]]
