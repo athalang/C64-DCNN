@@ -35,15 +35,14 @@ def populateCSRMatrix(sparse: torch.Tensor) -> CSRMatrix:
 
 def populateConv(qconv: QConv2d) -> Conv:
     nested_matrices: list[list[Matrix]] = []
-    nested_scales: list[list[c_uint16]] = []
+    scales: list[c_uint16] = []
 
     for out_i in range(0, qconv.out_channels):
         matrices: list[Matrix] = []
-        scales: list[c_uint16] = []
+        filter_scale = torch.flatten(qconv.weight._scale)[out_i].item()
 
         for in_i in range(0, qconv.in_channels):
             filter_weights = qconv.weight._data[out_i][in_i].to_sparse_csr()
-            filter_scale = torch.flatten(qconv.weight._scale)[out_i].item()
 
             if filter_scale == 0:
                 matrix = populateZeroMatrix(filter_weights)
@@ -51,17 +50,16 @@ def populateConv(qconv: QConv2d) -> Conv:
                 matrix = populateCSRMatrix(filter_weights)
 
             matrices.append(matrix)
-            scales.append(fixedUint(filter_scale))
 
         nested_matrices.append(matrices)
-        nested_scales.append(scales)
+        scales.append(fixedUint(filter_scale))
 
     return Conv(
         in_i=qconv.in_channels,
         out_i=qconv.out_channels,
         kernel_i=qconv.kernel_size[0],
         padding_i=qconv.padding[0],
-        scale_aa=nested_scales,
+        scale_a=scales,
         matrix_aa=nested_matrices,
     )
 
@@ -193,14 +191,21 @@ if __name__ == '__main__':
                 out.extend([0 for i in range(2 * 2)])
 
                 place16BitWord(len(out), out, pointers)
-                for row in forward.scale_aa:
-                    for scale in row:
-                        append16BitWord(scale, out)
+                for scale in forward.scale_a:
+                    append16BitWord(scale, out)
 
                 place16BitWord(len(out), out, pointers + 2)
+                # Add placeholder pointer bytes
+                matrixpointers = len(out)
+                elements = len([m for row in forward.matrix_aa for m in row])
+                out.extend([0 for i in range(forward.in_i * forward.out_i * 2)])
+
+                i = 0
                 for row in forward.matrix_aa:
                     for matrix in row:
+                        place16BitWord(len(out), out, matrixpointers + i)
                         matrixBytes(matrix, out)
+                        i += 2
 
         else:
             if isinstance(forward, MaxPool):

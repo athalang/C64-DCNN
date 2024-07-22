@@ -51,7 +51,7 @@ class Conv(Layer):
     padding_i: c_uint8
 
     # list of out_i lists, with in_i matrices each
-    scale_aa: list[list[c_uint16]] # list[list[fxp-u16/15]]
+    scale_a: list[c_uint16] # list[fxp-u16/15]
     matrix_aa: list[list[Matrix]]
 
 @dataclass(kw_only=True)
