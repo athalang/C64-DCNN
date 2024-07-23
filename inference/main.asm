@@ -3,13 +3,17 @@
 !basic
   ldx #$00
 
-LOOP
-  lda TEXT,x
-  jsr $FFD2
+ForwardsIter
   inx
-  cmp #$00
-  bne LOOP
+
+  ; Forward
+
+  cpx ModelBinary
+  bne ForwardsIter
   rts
 
-TEXT
-  !text "{clr}HELLO WORLD!",0
+SampleImage
+  !bin "../three.bin"
+
+ModelBinary
+  !bin "../model.bin"

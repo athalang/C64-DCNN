@@ -1,3 +1,5 @@
+#pragma endian little
+
 enum matrixtypes : u8 {
     zero,
     csr,
