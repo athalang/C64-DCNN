@@ -12,8 +12,7 @@ struct matrix {
 
     if (type == matrixtypes::csr) {
         u16 nnz;
-        u16 rowi;
-        u16 *mrow[rowi] : u16;
+        u16 *mrow[rows] : u16;
         u16 *mcol[nnz] : u16;
         u8 *mval[nnz] : u16;
     }

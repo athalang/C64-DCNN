@@ -15,7 +15,6 @@ class ZeroMatrix(Matrix):
 class CSRMatrix(Matrix):
     type_i: c_uint8 = 1
     nnz_i: c_uint16
-    row_ptr_i: c_uint16
     row_ptr_a: list[c_uint16] # row_ptr_i bytes
     col_index_a: list[c_uint16] # nnz_i * 2 bytes
     value_a: list[c_int8] # nnz_i bytes

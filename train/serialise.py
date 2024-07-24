@@ -25,7 +25,6 @@ def populateCSRMatrix(sparse: torch.Tensor) -> CSRMatrix:
         col_i=sparse.shape[1],
         # last element of crow_indices is nnz
         nnz_i=sparse.crow_indices()[-1].item(),
-        row_ptr_i=len(row_ptrs),
         row_ptr_a=row_ptrs,
         col_index_a=col_indices,
         value_a=values,
@@ -99,7 +98,6 @@ def matrixBytes(matrix: Matrix, out: bytearray):
 
     if isinstance(matrix, CSRMatrix):
         append16BitWord(matrix.nnz_i, out)
-        append16BitWord(matrix.row_i, out)
 
         # Add placeholder pointer bytes
         pointers = len(out)
