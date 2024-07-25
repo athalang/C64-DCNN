@@ -1,5 +1,4 @@
-*.c64
-*.s64
+build/
 *.prg
 
 data/

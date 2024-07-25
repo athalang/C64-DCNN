@@ -1,28 +1,33 @@
-!src "multiply.asm"
+!src "inference/multiply.asm"
+!src "inference/matrix.asm"
 
 ForwardIterMax = $08
 CurrentLayerLo = $09
 CurrentLayerHi = $0A
 
-*=$0801
-!basic
+!zn Main
+* = $0801
+
+SampleImage !bin "../three.bin"
+ModelBinary !bin "../model.bin"
+
   ; Switch out BASIC ROM
   lda #%00110110
   sta $01
 
-  ; Set up multiply routine
+  ; Set up umult16 routine
   jsr init
 
   ; Jam if 0 layers in model
   lda #0
   cmp ModelBinary
-  beq FormatError
+  beq .FormatError
 
   ; Store 2 * num of layers at ForwardIterMax
   ldx #0
   lda ModelBinary
   asl
-  bcs FormatError ; Fail if overflow
+  bcs .OverflowError ; Jam if overflow
   sta ForwardIterMax
 
 ForwardIter
@@ -41,8 +46,5 @@ ForwardIter
 
   rts
 
-FormatError jam
-
-SampleImage !bin "../three.bin"
-
-ModelBinary !bin "../model.bin"
+.FormatError jam
+.OverflowError jam

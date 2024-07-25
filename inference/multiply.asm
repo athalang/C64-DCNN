@@ -1,5 +1,6 @@
-; from 6502.org, by Repose: http://forum.6502.org/viewtopic.php?p=106519#p106519
 ; taken from https://github.com/TobyLobster/multiply_test
+
+; from 6502.org, by Repose: http://forum.6502.org/viewtopic.php?p=106519#p106519
 
 ; 16 bit x 16 bit unsigned multiply, 32 bit result
 ; Average cycles: 187.07
@@ -27,28 +28,30 @@ z0  = $04            ; product, 2 bytes + 2 registers
                      ; z2  = $06 returned in A reg
 z3  = $07            ;
 
-* = $C700
+!zn Mult
+
+* = $C000
 
 ; Align tables to start of page
 ; Note - the last byte of each table is never referenced, as a+b<=510
 sqrlo
-    !for i = 0 to 511
+    !for i, 0, 511 {
         !byte <((i*i)/4)
-    !end
+    }
 sqrhi
-    !for i = 0 to 511
+    !for i, 0, 511 {
         !byte >((i*i)/4)
-    !end
+    }
 
 negsqrlo
-    !for i = 0 to 511
+    !for i, 0, 511 {
         !byte <(((255-i)*(255-i))/4)
-    !end
+    }
 
 negsqrhi
-    !for i = 0 to 511
+    !for i, 0, 511 {
         !byte >(((255-i)*(255-i))/4)
-    !end
+    }
 
 ; Diagram of the additions
 ;                 y1    y0
