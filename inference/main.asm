@@ -5,7 +5,9 @@ ForwardIterMax = $08
 CurrentLayerLo = $09
 CurrentLayerHi = $0A
 
-!zn Main
+!zone Main
+.importonce
+!ifdef .importonce !eof
 * = $0801
 
 SampleImage !bin "../three.bin"

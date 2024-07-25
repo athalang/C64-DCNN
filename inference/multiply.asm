@@ -28,8 +28,9 @@ z0  = $04            ; product, 2 bytes + 2 registers
                      ; z2  = $06 returned in A reg
 z3  = $07            ;
 
-!zn Mult
-
+!zone Mult
+.importonce
+!ifdef .importonce !eof
 * = $C000
 
 ; Align tables to start of page
