@@ -20,7 +20,22 @@ def populateCSRMatrix(sparse: torch.Tensor) -> CSRMatrix:
     col_indices = [col.item() for col in sparse.col_indices()]
     values = [val.item() for val in sparse.values()]
 
+    bitfield = 1
+    if sparse.crow_indices()[-1].item() <= 255:
+        bitfield |= 0b10000000
+    if sparse.shape[0] <= 255:
+        bitfield |= 0b01000000
+    if sparse.shape[1] <= 255:
+        bitfield |= 0b00100000
+
+    bitfield |= 0b00010000
+    for row_ptr in row_ptrs:
+        if row_ptr > 255:
+            bitfield &= 0b11101111
+            break
+
     matrix = CSRMatrix(
+        type_i=bitfield,
         row_i=sparse.shape[0],
         col_i=sparse.shape[1],
         # last element of crow_indices is nnz
@@ -93,11 +108,21 @@ def append16BitWord(word: int, bytes: bytearray):
 
 def matrixBytes(matrix: Matrix, out: bytearray):
     out.append(matrix.type_i)
-    append16BitWord(matrix.row_i, out)
-    append16BitWord(matrix.col_i, out)
+    if matrix.type_i & 0b01000000 == 0b01000000:
+        out.append(matrix.row_i)
+    else:
+        append16BitWord(matrix.row_i, out)
+
+    if matrix.type_i & 0b00100000 == 0b00100000:
+        out.append(matrix.col_i)
+    else:
+        append16BitWord(matrix.col_i, out)
 
     if isinstance(matrix, CSRMatrix):
-        append16BitWord(matrix.nnz_i, out)
+        if matrix.type_i & 0b10000000 == 0b10000000:
+            out.append(matrix.nnz_i)
+        else:
+            append16BitWord(matrix.nnz_i, out)
 
         # Add placeholder pointer bytes
         pointers = len(out)
@@ -105,11 +130,17 @@ def matrixBytes(matrix: Matrix, out: bytearray):
 
         place16BitWord(len(out), out, pointers)
         for row_ptr in matrix.row_ptr_a:
-            append16BitWord(row_ptr, out)
+            if matrix.type_i & 0b00010000 == 0b00010000:
+                out.append(row_ptr)
+            else:
+                append16BitWord(row_ptr, out)
 
         place16BitWord(len(out), out, pointers + 2)
         for col_index in matrix.col_index_a:
-            append16BitWord(col_index, out)
+            if matrix.type_i & 0b00100000 == 0b00100000:
+                out.append(col_index)
+            else:
+                append16BitWord(col_index, out)
 
         place16BitWord(len(out), out, pointers + 4)
         for value in matrix.value_a:

@@ -5,15 +5,33 @@ enum matrixtypes : u8 {
     csr,
 };
 
-struct matrix {
-    u8 type;
-    u16 rows;
-    u16 cols;
+bitfield matrixoptions {
+  type : 1;
+  padding : 3;
+  ptr8 : 1;
+  col8 : 1;
+  row8 : 1;
+  nnz8 : 1;
+};
 
-    if (type == matrixtypes::csr) {
-        u16 nnz;
-        u16 *mrow[rows] : u16;
-        u16 *mcol[nnz] : u16;
+struct matrix {
+    matrixoptions options;
+    if (options.row8) u8 rows;
+    else u16 rows;
+
+    if (options.col8) u8 cols;
+    else u16 cols;
+
+    if (options.type == matrixtypes::csr) {
+        if (options.nnz8) u8 nnz;
+        else u16 nnz;
+
+        if (options.ptr8) u8 *mrow[rows] : u16;
+        else u16 *mrow[rows] : u16;
+
+        if (options.col8) u8 *mcol[nnz] : u16;
+        else u16 *mcol[nnz] : u16;
+
         u8 *mval[nnz] : u16;
     }
 };

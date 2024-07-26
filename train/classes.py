@@ -4,19 +4,27 @@ from ctypes import c_int8, c_uint8, c_uint16
 @dataclass
 class Matrix:
     type_i: c_uint8
-    row_i: c_uint16
-    col_i: c_uint16
 
 @dataclass(kw_only=True)
 class ZeroMatrix(Matrix):
     type_i: c_uint8 = 0
+    row_i: c_uint16
+    col_i: c_uint16
 
 @dataclass(kw_only=True)
 class CSRMatrix(Matrix):
+    ## bitfield
+    # 7th bit determines if nnz is uint8 or uint16
+    # 6th and 5th bits determine if rows and cols are uint8 or uint16
+    # 4th bit determines if row_ptrs are uint8 or uint16
+    # 0th bit determines data struct, will be 1
     type_i: c_uint8 = 1
-    nnz_i: c_uint16
-    row_ptr_a: list[c_uint16] # row_ptr_i bytes
-    col_index_a: list[c_uint16] # nnz_i * 2 bytes
+
+    nnz_i: int
+    row_i: int
+    col_i: int
+    row_ptr_a: list[int] # row_i * int bytes
+    col_index_a: list[int] # nnz_i * int bytes
     value_a: list[c_int8] # nnz_i bytes
 
 @dataclass
