@@ -176,3 +176,36 @@ init
     lda #>negsqrhi
     sta p_neg_sqr_hi+1
     rts
+
+; from 'Microcomputing' Magazine (June 1981) article by Leo Scanlon https://archive.org/details/kilobaudmagazine-1981-06/page/n109/mode/2up
+; see also 'Beyond Basic' by Richard Freeman (1983) https://archive.org/details/bbcbb/page/120/mode/2up
+; see also 'Microprocessors : essentials, components and systems' by R Meadows (1983) https://archive.org/details/microprocessorse0000mead/page/240/mode/2up
+
+; 8 bit x 8 bit unsigned multiply, 16 bit result
+; Average cycles: 185.00
+; 18 bytes
+
+multiplicand = $97
+multiplier   = $98
+resultlow    = $99
+resulthigh   = $9A
+
+; Multiply multiplier * multiplicand
+;
+; On Exit:
+;   (resultlow, resulthigh): product
+umult8
+    lda #0
+    ldx #8
+next
+    lsr multiplier
+    bcc rot
+    clc
+    adc multiplicand
+rot
+    ror
+    ror resultlow
+    dex
+    bne next
+    sta resulthigh
+    rts
