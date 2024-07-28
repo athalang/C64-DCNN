@@ -1,3 +1,6 @@
+!ifdef libMultImported !eof
+libMultImported = 1
+
 ; taken from https://github.com/TobyLobster/multiply_test
 
 ; from 6502.org, by Repose: http://forum.6502.org/viewtopic.php?p=106519#p106519
@@ -29,9 +32,7 @@ z0  = $04            ; product, 2 bytes + 2 registers
 z3  = $07            ;
 
 !zone Mult
-.importonce
-!ifdef .importonce !eof
-* = $C000
+* = $3000
 
 ; Align tables to start of page
 ; Note - the last byte of each table is never referenced, as a+b<=510

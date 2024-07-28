@@ -1,3 +1,6 @@
+!ifdef MainImported !eof
+MainImported = 1
+
 !src "inference/multiply.asm"
 !src "inference/matrix.asm"
 
@@ -6,8 +9,6 @@ CurrentLayerLo = $09
 CurrentLayerHi = $0A
 
 !zone Main
-.importonce
-!ifdef .importonce !eof
 * = $0801
 
 SampleImage !bin "../three.bin"
