@@ -8,6 +8,11 @@ CurrentCol = $46
 CurrElementLo = $47
 CurrElementHi = $48
 
+!ifndef libMultImported {
+libMultImported
+  !src "inference/multiply.asm"
+}
+
 * = $2800
 
 !zone Matrix {

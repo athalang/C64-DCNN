@@ -1,18 +1,25 @@
-!ifdef MainImported !eof
-MainImported = 1
-
-!src "inference/multiply.asm"
-!src "inference/matrix.asm"
-
 ForwardIterMax = $08
 CurrentLayerLo = $09
 CurrentLayerHi = $0A
 
-!zone Main
+!ifndef libMatrixImported {
+libMatrixImported
+  !src "inference/matrix.asm"
+}
+!ifndef libMultImported {
+libMultImported
+  !src "inference/multiply.asm"
+}
+
 * = $0801
 
 SampleImage !bin "../three.bin"
 ModelBinary !bin "../model.bin"
+
+!zone Main {
+
+.FormatError jam
+.OverflowError jam
 
   ; Switch out BASIC ROM
   lda #%00110110
@@ -48,6 +55,4 @@ ForwardIter
   bne ForwardIter
 
   rts
-
-.FormatError jam
-.OverflowError jam
+}

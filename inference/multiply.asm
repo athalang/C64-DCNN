@@ -1,6 +1,3 @@
-!ifdef libMultImported !eof
-libMultImported = 1
-
 ; taken from https://github.com/TobyLobster/multiply_test
 
 ; from 6502.org, by Repose: http://forum.6502.org/viewtopic.php?p=106519#p106519
@@ -31,8 +28,8 @@ z0  = $04            ; product, 2 bytes + 2 registers
                      ; z2  = $06 returned in A reg
 z3  = $07            ;
 
-!zone Mult
 * = $3000
+!zone Mult {
 
 ; Align tables to start of page
 ; Note - the last byte of each table is never referenced, as a+b<=510
@@ -256,3 +253,4 @@ umult8
     lda (lmul1),Y
     sbc squaretable2_msb,X
     rts
+}
