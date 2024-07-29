@@ -1,59 +1,52 @@
-DenseLo = $40
-DenseHi = $41
-Rows = $42
-Cols = $43
-SparseLo = $44
-SparseHi = $45
-CurrentCol = $46
-CurrElementLo = $47
-CurrElementHi = $48
+dense		= $40 ; 2 bytes
+rows		= $42
+cols		= $43
+sparse_matrix	= $44 ; 2 bytes
+curr_col	= $46
+curr_element	= $47 ; 2 bytes
 
-!ifndef libMultImported {
-libMultImported
-  !src "inference/multiply.asm"
+!ifndef lib_multiply {
+lib_multiply	!src "inference/multiply.asm"
 }
 
 * = $2800
 
-!zone Matrix {
+!zone matrix {
 
-.OverflowError jam
+.overflow_err	jam
 
 ; Input will always be 28 * 28
 ; Modifies X and Y
-DenseToSparse
-  jsr init
-  ldx #0
+sparsify	jsr init
+		ldx #0
 
-.OuterLoop
-  ldy #0
+-		ldy #0
 
-.InnerLoop
-  ; Get current element index
-  ; (cols * current row + current col)
-  sty CurrentCol
-  ldy Cols
-  jsr umult8
-  sta CurrElementHi
-  clc
-  lda CurrentCol
-  adc prod_low
-  sta CurrElementLo
-  bcc NoCarry
-  lda #1
-  adc CurrElementHi
-  sta CurrElementHi
-  bvs .OverflowError
-NoCarry
-  ldy CurrentCol
+-		; Get current element index
+		; (cols * current row + current col)
+		sty curr_col
+		ldy cols
+		jsr u8_mult
+		sta curr_element+1
+		clc
+		lda curr_col
+		adc prod_low
+		sta curr_element
+		bcc +
+		lda #1
+		adc curr_element+1
+		sta curr_element+1
+		bvs .overflow_err
++		ldy curr_col
 
-  iny
-  cpy $42
-  bne .InnerLoop
+		iny
+		cpy $42
+		bne -
 
-  inx
-  cpx $43
-  bne .OuterLoop
+		inx
+		cpx $43
+		bne --
 
-  rts
-}
+		rts
+
+} ; End of zone matrix
