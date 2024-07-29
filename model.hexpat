@@ -36,7 +36,7 @@ struct matrix {
     }
 };
 
-enum forwardtypes : u8 {
+enum layertypes : u8 {
     relu,
     argmax,
     fullconn,
@@ -49,20 +49,20 @@ struct matrixptr {
     matrix *ptr: u16;
 };
 
-struct forward {
-    forwardtypes type;
+struct layer {
+    layertypes type;
 
-    if (type == forwardtypes::maxpool) {
+    if (type == layertypes::maxpool) {
         u8 kernel;
     }
-    else if (type == forwardtypes::fullconn) {
+    else if (type == layertypes::fullconn) {
         u16 ini;
         u16 outi;
         u16 *bias[outi] : u16;
         u16 *scale[outi] : u16;
         matrix *matrix : u16;
     }
-    else if (type == forwardtypes::conv) {
+    else if (type == layertypes::conv) {
         u16 ini;
         u16 outi;
         u8 kernel;
@@ -72,9 +72,9 @@ struct forward {
     }
 };
 
-struct forwardptr {
-    forward *ptr: u16;
+struct layerptr {
+    layer *ptr: u16;
 };
 
-u8 num_of_forwards @ 0x00;
-forwardptr forwards[num_of_forwards] @ 0x01;
+u8 num_of_layers @ 0x00;
+layerptr layers[num_of_layers] @ 0x01;
