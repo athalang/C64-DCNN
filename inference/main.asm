@@ -37,7 +37,7 @@ model_params	!bin "../model.bin"
 		bcs .overflow_err
 		sta layer_iter_max
 
-layer_loop	; Set curr_layer to pointer
+-		; Set curr_layer to pointer
 		inx ; Pointers start from 1 relative to model_params
 		lda model_params,x
 		sta curr_layer
@@ -48,7 +48,7 @@ layer_loop	; Set curr_layer to pointer
 		; Forward
 
 		cpx layer_iter_max
-		bne layer_loop
+		bne -
 
 		rts
 
