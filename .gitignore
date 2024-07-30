@@ -1,11 +1,12 @@
+# asm built files
 build/
-*.prg
 
+# python resources
 data/
-
 .mypy_cache
-**/__pycache__/
+__pycache__/
 venv/
 
+# python built files
 model.bin
 qmodel.safetensors

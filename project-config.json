@@ -2,13 +2,10 @@
     "name": "C64-DCNN",
     "description": "Deep Convolutional Neural Network on the Commodore 64",
     "toolkit": "acme",
-    "sources": [
-        "inference/main.asm"
-    ],
+    "main": "inference/main.asm",
     "build": "debug",
     "definitions": [],
-    "includes": [
-    ],
+    "includes": [],
     "args": [],
     "compiler": ""
 }
