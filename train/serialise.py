@@ -14,23 +14,20 @@ def append16BitWord(word: int, bytes: bytearray):
     bytes.append(word & 0xff)
     bytes.append((word >> 8) & 0xff)
 
+def appendWithFlag(value: int, bitfield: int, flag: int, bytes: bytearray):
+    if bitfield & flag == flag:
+        bytes.append(value)
+    else:
+        append16BitWord(value, bytes)
+
 def matrixBytes(matrix: Matrix, out: bytearray):
     out.append(matrix.type_i)
-    if matrix.type_i & 0b01000000 == 0b01000000:
-        out.append(matrix.row_i)
-    else:
-        append16BitWord(matrix.row_i, out)
+    appendWithFlag(matrix.row_i, matrix.type_i, 0b01000000, out)
 
-    if matrix.type_i & 0b00100000 == 0b00100000:
-        out.append(matrix.col_i)
-    else:
-        append16BitWord(matrix.col_i, out)
+    appendWithFlag(matrix.col_i, matrix.type_i, 0b00100000, out)
 
     if isinstance(matrix, CSRMatrix):
-        if matrix.type_i & 0b10000000 == 0b10000000:
-            out.append(matrix.nnz_i)
-        else:
-            append16BitWord(matrix.nnz_i, out)
+        appendWithFlag(matrix.nnz_i, matrix.type_i, 0b10000000, out)
 
         # Add placeholder pointer bytes
         pointers = len(out)
@@ -38,17 +35,11 @@ def matrixBytes(matrix: Matrix, out: bytearray):
 
         place16BitWord(len(out), out, pointers)
         for row_ptr in matrix.row_ptr_a:
-            if matrix.type_i & 0b00010000 == 0b00010000:
-                out.append(row_ptr)
-            else:
-                append16BitWord(row_ptr, out)
+            appendWithFlag(row_ptr, matrix.type_i, 0b00010000, out)
 
         place16BitWord(len(out), out, pointers + 2)
         for col_index in matrix.col_index_a:
-            if matrix.type_i & 0b00100000 == 0b00100000:
-                out.append(col_index)
-            else:
-                append16BitWord(col_index, out)
+            appendWithFlag(col_index, matrix.type_i, 0b00100000, out)
 
         place16BitWord(len(out), out, pointers + 4)
         for value in matrix.value_a:
@@ -71,17 +62,11 @@ if __name__ == '__main__':
     requantize(model, safe_load('qmodel.safetensors'))
 
     layers: list[Layer] = [
-        Conv.fromQconv2d(model.conv1),
-        ReLu(),
-        MaxPool(kernel_i=2),
-        Conv.fromQconv2d(model.conv2),
-        ReLu(),
-        MaxPool(kernel_i=2),
+        Conv.fromQconv2d(model.conv1), ReLu(), MaxPool(kernel_i=2),
+        Conv.fromQconv2d(model.conv2), ReLu(), MaxPool(kernel_i=2),
         Flatten(),
-        FullConn.fromQlinear(model.fc1),
-        ReLu(),
-        FullConn.fromQlinear(model.fc2),
-        ReLu(),
+        FullConn.fromQlinear(model.fc1), ReLu(),
+        FullConn.fromQlinear(model.fc2), ReLu(),
         FullConn.fromQlinear(model.fc3),
         ArgMax(),
     ]
@@ -119,8 +104,7 @@ if __name__ == '__main__':
         elif isinstance(layer, Conv):
             append16BitWord(layer.in_i, out)
             append16BitWord(layer.out_i, out)
-            out.append(layer.kernel_i)
-            out.append(layer.padding_i)
+            out.extend([layer.kernel_i, layer.padding_i])
 
             # Add placeholder pointer bytes
             pointers = len(out)
@@ -143,7 +127,7 @@ if __name__ == '__main__':
                     matrixBytes(matrix, out)
                     i += 2
         elif isinstance(layer, MaxPool):
-                out.append(layer.kernel_i)
+            out.append(layer.kernel_i)
 
     with open("model.bin", "wb") as binary_file:
         binary_file.write(out)
