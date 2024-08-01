@@ -1,5 +1,5 @@
 {
-    "[asm]": {
+    "[kickassembler]": {
         "editor.tabSize": 8
     }
 }
