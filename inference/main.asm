@@ -1,4 +1,5 @@
 #importonce
+#import "defines.asm"
 #import "multiply.asm"
 #import "matrix.asm"
 
@@ -14,10 +15,10 @@ dense_image:
 
 main: {
 
-format_err:	jmp $FCE2	// Model formatted incorrectly
-overflow_err:	jmp $FCE2	//
+format_err:	.byte JAM	// Model formatted incorrectly
+overflow_err:	.byte JAM
 
-		// Switch out BASIC ROM
+@main_func:	// Switch out BASIC ROM
 		lda #%00110110
 		sta $01
 

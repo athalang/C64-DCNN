@@ -1,4 +1,5 @@
 #importonce
+#import "defines.asm"
 #import "multiply.asm"
 
 .var dense		= $40 // 2 bytes
@@ -12,7 +13,7 @@
 
 matrix: {
 
-overflow_err:	jmp $FCE2
+overflow_err:	.byte JAM
 
 // Input will always be 28 * 28
 // Modifies X and Y
@@ -21,9 +22,10 @@ overflow_err:	jmp $FCE2
 
 !loop:		ldy #0
 
-!loop:		// Get current element index
+!loop:		sty curr_col
+
+		// Get current element index
 		// (cols * current row + current col)
-		sty curr_col
 		ldy cols
 		jsr u8_mult
 		sta curr_element+1
@@ -36,6 +38,7 @@ overflow_err:	jmp $FCE2
 		adc curr_element+1
 		sta curr_element+1
 		bvs overflow_err
+
 !:		ldy curr_col
 
 		iny
