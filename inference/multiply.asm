@@ -152,7 +152,7 @@ x1y1l		adc #0      ; + x1y1l
 
 fin		rts
 
-; Initialises both
+; Initialises multiplication tables
 mult_init	lda #>sqrlo
 		sta p_sqr_lo2+1
 		sta p_sqr_lo1+1
@@ -166,11 +166,6 @@ mult_init	lda #>sqrlo
 
 		lda #>negsqrhi
 		sta p_neg_sqr_hi+1
-
-		lda #>squaretable1_lsb          ; high byte (#2 in this instance)
-		sta lmul0+1
-		lda #>squaretable1_msb          ; high byte (#4 in this instance)
-		sta lmul1+1
 		rts
 
 ; from TobyLobster, based on Nick Jameson's 3D Demo for the BBC Micro (1994), https://github.com/simondotm/bbc-micro-3d/blob/master/source/culling.asm
@@ -185,34 +180,8 @@ lmul0		= $06   ; pointer into table 1 low
 lmul1		= $08   ; pointer into table 1 high
 prod_low	= $0a
 
-; table1 = n*n/4, where n=0..510
-; table2 = 0 if n=0 else (256-n)*(n-256)/4, where n=0..255
 
-; Table 1 must be aligned to start of a page
 
-squaretable1_lsb
-	!for i, 0, 510 {
-		!byte <((i*i)/4)
-	}
-	!byte 0     ; unused, needed for alignment of next table
-
-squaretable1_msb
-	!for i, 0, 510 {
-		!byte >((i*i)/4)
-	}
-	!byte 0     ; unused, needed for alignment of next table
-
-; Table 2 should be aligned to the start of a page for speed
-squaretable2_lsb
-	!byte 0
-	!for i, 1, 255 {
-		!byte <(((256-i)*(256-i))/4-1)
-	}
-squaretable2_msb
-	!byte 0
-	!for i, 1, 255 {
-		!byte >(((256-i)*(256-i))/4-1)
-	}
 
 ; Unsigned multiplication of two 8-bit terms is computed as:
 ;   if Y >= X:
@@ -237,15 +206,15 @@ u8_mult		stx lmul0
 		tax
 		lda (lmul0),Y
 		bcc +
-		sbc squaretable1_lsb,X
+		sbc sqrlo,X
 		sta prod_low
 		lda (lmul1),Y
-		sbc squaretable1_msb,X
+		sbc sqrhi,X
 		rts
-+		sbc squaretable2_lsb,X
++		sbc negsqrlo,X
 		sta prod_low
 		lda (lmul1),Y
-		sbc squaretable2_msb,X
+		sbc negsqrhi,X
 		rts
 
 } ; End of zone mult
