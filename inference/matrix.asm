@@ -1,52 +1,51 @@
-dense		= $40 ; 2 bytes
-rows		= $42
-cols		= $43
-sparse_matrix	= $44 ; 2 bytes
-curr_col	= $46
-curr_element	= $47 ; 2 bytes
+#importonce
+#import "multiply.asm"
 
-!ifndef lib_multiply {
-lib_multiply	!src "inference/multiply.asm"
-}
+.var dense		= $40 // 2 bytes
+.var rows		= $42
+.var cols		= $43
+.var sparse_matrix	= $44 // 2 bytes
+.var curr_col		= $46
+.var curr_element	= $47 // 2 bytes
 
 * = $2800
 
-!zone matrix {
+matrix: {
 
-.overflow_err	jam
+overflow_err:	jmp $FCE2
 
-; Input will always be 28 * 28
-; Modifies X and Y
-sparsify	jsr init
+// Input will always be 28 * 28
+// Modifies X and Y
+@sparsify:	jsr mult_init
 		ldx #0
 
--		ldy #0
+!loop:		ldy #0
 
--		; Get current element index
-		; (cols * current row + current col)
+!loop:		// Get current element index
+		// (cols * current row + current col)
 		sty curr_col
 		ldy cols
 		jsr u8_mult
 		sta curr_element+1
 		clc
 		lda curr_col
-		adc prod_low
+		adc z0
 		sta curr_element
-		bcc +
+		bcc !+
 		lda #1
 		adc curr_element+1
 		sta curr_element+1
-		bvs .overflow_err
-+		ldy curr_col
+		bvs overflow_err
+!:		ldy curr_col
 
 		iny
 		cpy $42
-		bne -
+		bne !loop-
 
 		inx
 		cpx $43
-		bne --
+		bne !loop--
 
 		rts
 
-} ; End of zone matrix
+} // End of scope matrix

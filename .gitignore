@@ -1,5 +1,6 @@
 # asm built files
-build/
+bin/
+.source.txt
 
 # python resources
 data/
