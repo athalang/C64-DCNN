@@ -7,9 +7,9 @@
 
 * = $0801
 
-dense_image:
-.import binary	"../model.bin"
 model_params:
+.import binary	"../model.bin"
+dense_image:
 .import binary	"../three.bin"
 
 main: {
