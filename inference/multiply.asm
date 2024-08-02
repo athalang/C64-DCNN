@@ -1,5 +1,5 @@
 #importonce
-#import "defines.asm"
+#import "utils.asm"
 
 // taken from https://github.com/TobyLobster/multiply_test
 

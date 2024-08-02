@@ -1,5 +1,5 @@
 #importonce
-#import "defines.asm"
+#import "utils.asm"
 #import "multiply.asm"
 #import "matrix.asm"
 
@@ -8,21 +8,9 @@
 
 * = $0801
 
-model_params:
-.import binary	"../model.bin"
-dense_image:
-.import binary	"../three.bin"
-
 main: {
 
-format_err:	.byte JAM	// Model formatted incorrectly
-overflow_err:	.byte JAM
-
-@main_func:	// Switch out BASIC ROM
-		lda #%00110110
-		sta $01
-
-		// Set up umult16 routine
+@main_func:	// Set up multiplication tables
 		jsr mult_init
 
 		// Jam if 0 layers in model
@@ -51,5 +39,8 @@ overflow_err:	.byte JAM
 		bne !-
 
 		rts
+
+format_err:	.byte JAM	// Model formatted incorrectly
+overflow_err:	.byte JAM
 
 } // End of scope main
