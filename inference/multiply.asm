@@ -21,7 +21,7 @@
 				// z2  = $06 returned in A reg
 .var z3		= $07		//
 
-* = $3000
+* = $1000
 
 mult: {
 
