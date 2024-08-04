@@ -1,24 +1,24 @@
 #importonce
 
-.const JAM	= $02 // Jam opcode
+.const JAM	= $02	// Jam opcode
 
-.macro add_u16 (n, m, res) {
+.macro add_immediate_u16 (n, lo, hi, res) {
 		clc
 		lda n
-		adc m
+		adc #lo
 		sta res
 		lda n+1
-		adc m+1
+		adc #hi
 		sta res+1
 }
 
 * = $2000
 
-model_params:
-.import binary	"../model.bin"
+model_params:		.import binary "../model.bin"
 
-dense_image:
-.import binary	"../three.bin"
+curr_pixel:		.word dense_image
+
+dense_image:		.import binary "../three.bin"
 
 // Dense input shape
 .const DENSE_ROWS	= 28
