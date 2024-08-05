@@ -16,8 +16,6 @@
 
 model_params:		.import binary "../model.bin"
 
-curr_pixel:		.word dense_image
-
 dense_image:		.import binary "../three.bin"
 
 // Dense input shape
