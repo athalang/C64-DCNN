@@ -9,6 +9,13 @@
 		sta addr+1
 }
 
+.macro str_immediate_2u8_u16 (lo, addr) {
+		lda lo
+		sta addr
+		lda lo+1
+		sta addr+1
+}
+
 .macro add_immediate_u16 (n, lo, hi, res) {
 		clc
 		lda n
