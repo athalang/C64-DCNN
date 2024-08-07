@@ -9,7 +9,7 @@
 		sta addr+1
 }
 
-.macro str_immediate_2u8_u16 (lo, addr) {
+.macro str_absolute_2u8_u16 (lo, addr) {
 		lda lo
 		sta addr
 		lda lo+1
