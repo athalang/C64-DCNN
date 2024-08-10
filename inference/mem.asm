@@ -11,7 +11,9 @@
 // Free list
 .const FREE_START	= $4000		// Needs to be aligned
 // Worst case, when every other block is free
-.const FREE_MAX		= BLOCKS / 2
+.const FREE_WORST_CASE	= BLOCKS / 2
+// How much is permissible, i.e. reasonable rank limit
+.const FREE_MAX		= FREE_WORST_CASE / 4
 
 .const HEAP_START	= FREE_START + FREE_MAX
 .const HEAP_SIZE	= BLOCKS * BLOCK_ALIGNMENT
