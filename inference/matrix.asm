@@ -1,5 +1,6 @@
 #importonce
 #import "utils.asm"
+#import "memory.asm"
 #import "multiply.asm"
 
 * = $0900
@@ -17,7 +18,8 @@ matrix: {
 overflow_err:	.byte JAM
 
 // Modifies X and Y
-@sparse_input:	jsr mult_init
+@sparse_input:	jsr heap_init
+		jsr mult_init
 
 		// Init zeropage counter
 		str_immediate_u16_u16(dense_image, curr_pixel)
