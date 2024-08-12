@@ -3,22 +3,29 @@
 
 // Blocks 8 byte aligned
 // Size + 2 unused bits + Free boolean = 2 bytes
+// If free block, prev and next pointers
 // Payload, then size + options repeated (Knuth boundary tags)
 
 .const BITS_IGNORED	= 3
-.const BLOCK_ALIGNMENT	= pow(2, BITS_IGNORED)
+.const BYTE_ALIGNMENT	= pow(2, BITS_IGNORED)
+// Get the u8 mask for the least BITS_IGNORED bits
+.const IGNORED_MASK	= BYTE_ALIGNMENT - 1
+
 .const BLOCKS		= $1000
 
 .const HEAP_START	= $5000
-.const HEAP_SIZE	= BLOCKS * BLOCK_ALIGNMENT
+.const HEAP_SIZE	= BLOCKS * BYTE_ALIGNMENT
 
-.assert "Heap start aligned?", mod(HEAP_START, BLOCK_ALIGNMENT) == 0, true
+.assert "Heap start aligned?", mod(HEAP_START, BYTE_ALIGNMENT) == 0, true
 
 // Plus 1 after the end of the heap, i.e. first byte not in heap
 .const HEAP_END_1P	= HEAP_START + HEAP_SIZE
 
 // Remove unused bits and set free
 .const HEAP_OPTIONS	= (HEAP_SIZE >> BITS_IGNORED << BITS_IGNORED) | 1
+
+.const FIRST_FREE	= $40	// 2 bytes
+.const MALLOC_SIZE	= $42	// 2 bytes
 
 * = $0901
 
@@ -27,6 +34,10 @@ memory: {
 @heap_init:	lda #%00110110 // Hide BASIC ROM
 		sta 1
 
+		// Set first free pointer
+		str_immediate_u16_u16(HEAP_START, FIRST_FREE)
+
+		// Create a free block that spans the entire heap
 		str_immediate_u16_u16(HEAP_OPTIONS, HEAP_START)
 
 		// Clear next/prev pointers
@@ -35,9 +46,22 @@ memory: {
 
 		str_immediate_u16_u16(HEAP_OPTIONS, HEAP_END_1P-2)
 
+		// Debug malloc
+		str_immediate_u16_u16(9, MALLOC_SIZE)
+		jsr malloc
+
 		.byte JAM
 
 		rts
+
+@malloc:	// Align if unaligned
+!:		lda #IGNORED_MASK
+		and MALLOC_SIZE
+		beq !+
+		add_immediate_u16(MALLOC_SIZE, 1, 0, MALLOC_SIZE)
+		jmp !-
+
+!:		rts
 
 } // End of scope memory
 
