@@ -15,8 +15,6 @@
 
 matrix: {
 
-overflow_err:	.byte JAM
-
 // Modifies X and Y
 @sparse_input:	jsr heap_init
 		jsr mult_init

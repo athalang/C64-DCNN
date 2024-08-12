@@ -24,6 +24,9 @@
 		lda n+1
 		adc #hi
 		sta res+1
+		bvc !+
+		.byte JAM // Overflow error
+!:		nop
 }
 
 * = $2000
