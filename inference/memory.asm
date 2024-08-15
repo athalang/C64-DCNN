@@ -26,6 +26,7 @@
 
 .const FIRST_FREE	= $40	// 2 bytes
 .const MALLOC_SIZE	= $42	// 2 bytes
+.const CURR_BLOCK_SIZE	= $44	// 2 bytes
 
 * = $0901
 
@@ -54,6 +55,7 @@ memory: {
 
 		rts
 
+// Modifies Y
 @malloc:	// Align if unaligned
 !:		lda #IGNORED_MASK
 		and MALLOC_SIZE
@@ -61,7 +63,23 @@ memory: {
 		add_immediate_u16(MALLOC_SIZE, 1, 0, MALLOC_SIZE)
 		jmp !-
 
-!:		rts
+!:		ldy #0
+		lda (FIRST_FREE),y
+
+		// Remove unused bits
+		.for(var i = 0; i < BITS_IGNORED; i++) {
+			lsr
+		}
+		.for(var i = 0; i < BITS_IGNORED; i++) {
+			asl
+		}
+
+		sta CURR_BLOCK_SIZE
+		ldy #1
+		lda (FIRST_FREE),y
+		sta CURR_BLOCK_SIZE+1
+
+		rts
 
 } // End of scope memory
 
