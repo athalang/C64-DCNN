@@ -51,7 +51,7 @@ matrix: {
 		lda INPUT_NNZ+1
 		iny
 		sta (curr_row_ptr),y
-		str_absolute_2u8_u16(INPUT_NNZ, prev_row_ptr_val)
+		str_absolute_u16_u16(INPUT_NNZ, prev_row_ptr_val)
 		add_immediate_u16(curr_row_ptr, 2, 0, curr_row_ptr)
 
 !:		add_immediate_u16(INPUT_NNZ, 1, 0, INPUT_NNZ)

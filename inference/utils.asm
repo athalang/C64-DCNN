@@ -9,7 +9,7 @@
 		sta addr+1
 }
 
-.macro str_absolute_2u8_u16 (lo, addr) {
+.macro str_absolute_u16_u16 (lo, addr) {
 		lda lo
 		sta addr
 		lda lo+1
@@ -27,6 +27,42 @@
 		bvc !+
 		.byte JAM // Overflow error
 !:		nop
+}
+
+.macro cmp_immediate_u16 (imm, m, tmp) {
+		lda #imm
+		sec
+		sbc m
+		php
+		lda #(imm >> 8)
+		sbc m+1
+		php
+		pla
+		sta tmp
+		pla
+		and #%00000010
+		ora #%11111101
+		and tmp
+		pha
+		plp
+}
+
+.macro cmp_absolute_u16 (n, m, tmp) {
+		lda n
+		sec
+		sbc m
+		php
+		lda n+1
+		sbc m+1
+		php
+		pla
+		sta tmp
+		pla
+		and #%00000010
+		ora #%11111101
+		and tmp
+		pha
+		plp
 }
 
 * = $2000

@@ -26,7 +26,9 @@
 
 .const FIRST_FREE	= $40	// 2 bytes
 .const MALLOC_SIZE	= $42	// 2 bytes
-.const CURR_BLOCK_SIZE	= $44	// 2 bytes
+.const CURR_BLOCK	= $44	// 2 bytes
+.const CURR_BLOCK_SIZE	= $46	// 2 bytes
+.const TEMP		= $48	// 2 bytes
 
 * = $0901
 
@@ -63,8 +65,10 @@ memory: {
 		add_immediate_u16(MALLOC_SIZE, 1, 0, MALLOC_SIZE)
 		jmp !-
 
-!:		ldy #0
-		lda (FIRST_FREE),y
+!:		str_absolute_u16_u16(FIRST_FREE, CURR_BLOCK)
+
+!loop:		ldy #0
+		lda (CURR_BLOCK),y
 
 		// Remove unused bits
 		.for(var i = 0; i < BITS_IGNORED; i++) {
@@ -76,10 +80,27 @@ memory: {
 
 		sta CURR_BLOCK_SIZE
 		ldy #1
-		lda (FIRST_FREE),y
+		lda (CURR_BLOCK),y
 		sta CURR_BLOCK_SIZE+1
 
-		rts
+		cmp_absolute_u16(CURR_BLOCK_SIZE, MALLOC_SIZE, TEMP)
+		// When malloc size >= current block size
+		bpl block_found
+
+		// Set current pointer to next
+		ldy #4
+		lda (CURR_BLOCK),y
+		sta TEMP
+		ldy #5
+		lda (CURR_BLOCK),y
+		sta TEMP+1
+		str_absolute_u16_u16(TEMP, CURR_BLOCK)
+
+		cmp_immediate_u16(0, CURR_BLOCK, TEMP)
+		bne !loop- // If not null ptr, continue
+		.byte JAM
+
+block_found:	rts
 
 } // End of scope memory
 
