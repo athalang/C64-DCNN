@@ -29,6 +29,16 @@
 !:		nop
 }
 
+.macro sub_immediate_u16 (n, lo, hi, res) {
+		sec
+		lda n
+		sbc #lo
+		sta res
+		lda n+1
+		sbc #hi
+		sta res+1
+}
+
 .macro cmp_immediate_u16 (imm, m, tmp) {
 		lda #imm
 		sec

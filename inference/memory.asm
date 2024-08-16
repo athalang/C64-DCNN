@@ -58,7 +58,10 @@ memory: {
 		rts
 
 // Modifies Y
-@malloc:	// Align if unaligned
+@malloc:	// Add header + footer bytes
+		add_immediate_u16(MALLOC_SIZE, 4, 0, MALLOC_SIZE)
+
+		// Align if unaligned
 !:		lda #IGNORED_MASK
 		and MALLOC_SIZE
 		beq !+
@@ -100,7 +103,15 @@ memory: {
 		bne !loop- // If not null ptr, continue
 		.byte JAM
 
-block_found:	rts
+block_found:	// Header bytes
+		ldy #0
+		lda MALLOC_SIZE
+		sta (CURR_BLOCK),y
+		ldy #1
+		lda MALLOC_SIZE+1
+		sta (CURR_BLOCK),y
+
+		rts
 
 } // End of scope memory
 
