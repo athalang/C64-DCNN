@@ -28,7 +28,8 @@
 .const MALLOC_SIZE	= $42	// 2 bytes
 .const CURR_BLOCK	= $44	// 2 bytes
 .const CURR_BLOCK_SIZE	= $46	// 2 bytes
-.const TEMP		= $48	// 2 bytes
+.const CURR_FOOTER	= $48	// 2 bytes
+.const TEMP_WORD	= $4A	// 2 bytes
 
 * = $0901
 
@@ -86,20 +87,20 @@ memory: {
 		lda (CURR_BLOCK),y
 		sta CURR_BLOCK_SIZE+1
 
-		cmp_absolute_u16(CURR_BLOCK_SIZE, MALLOC_SIZE, TEMP)
+		cmp_absolute_u16(CURR_BLOCK_SIZE, MALLOC_SIZE, TEMP_WORD)
 		// When malloc size >= current block size
 		bpl block_found
 
 		// Set current pointer to next
 		ldy #4
 		lda (CURR_BLOCK),y
-		sta TEMP
+		sta TEMP_WORD
 		ldy #5
 		lda (CURR_BLOCK),y
-		sta TEMP+1
-		str_absolute_u16_u16(TEMP, CURR_BLOCK)
+		sta TEMP_WORD+1
+		str_absolute_u16_u16(TEMP_WORD, CURR_BLOCK)
 
-		cmp_immediate_u16(0, CURR_BLOCK, TEMP)
+		cmp_immediate_u16(0, CURR_BLOCK, TEMP_WORD)
 		bne !loop- // If not null ptr, continue
 		.byte JAM
 
@@ -111,7 +112,20 @@ block_found:	// Header bytes
 		lda MALLOC_SIZE+1
 		sta (CURR_BLOCK),y
 
-		rts
+		// Footer bytes
+		sub_immediate_u16(MALLOC_SIZE, 2, 0, CURR_FOOTER)
+		add_absolute_u16(CURR_FOOTER, CURR_BLOCK, CURR_FOOTER)
+		ldy #0
+		lda MALLOC_SIZE
+		sta (CURR_FOOTER),y
+		ldy #1
+		lda MALLOC_SIZE+1
+		sta (CURR_FOOTER),y
+
+		cmp_absolute_u16(CURR_BLOCK_SIZE, MALLOC_SIZE, TEMP_WORD)
+		beq !+
+
+!:		rts
 
 } // End of scope memory
 
